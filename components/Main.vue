@@ -551,6 +551,67 @@
                   <el-switch v-model="config.passiveLearningRecord" inline-prompt active-text="启用" inactive-text="禁用" />
                 </el-col>
               </el-row>
+
+              <!-- 生词本管理 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="12" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="管理生词本，查看已学习的词语" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">生词本管理<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="12">
+                  <el-button size="small" @click="showVocabularyBook = !showVocabularyBook">
+                    {{ showVocabularyBook ? '隐藏' : '查看' }}生词本 ({{ config.passiveLearningVocabularyBook.length }})
+                  </el-button>
+                </el-col>
+              </el-row>
+
+              <!-- 生词本列表 -->
+              <div v-if="showVocabularyBook" class="vocabulary-book-panel">
+                <div class="vocabulary-book-header">
+                  <span>生词本 ({{ config.passiveLearningVocabularyBook.length }} 个词语)</span>
+                  <el-button size="small" type="danger" @click="clearVocabularyBook">清空生词本</el-button>
+                </div>
+                <div class="vocabulary-book-list">
+                  <div v-for="(word, index) in config.passiveLearningVocabularyBook" :key="index" class="vocabulary-item">
+                    <span>{{ word }}</span>
+                    <el-button size="small" @click="markAsMastered(word)">标记掌握</el-button>
+                    <el-button size="small" type="danger" @click="removeFromVocabularyBook(word)">移除</el-button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 已掌握词语管理 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="12" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="管理已掌握的词语，这些词语不会被翻译" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">已掌握词语<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="12">
+                  <el-button size="small" @click="showMasteredWords = !showMasteredWords">
+                    {{ showMasteredWords ? '隐藏' : '查看' }}已掌握 ({{ config.passiveLearningMasteredWords.length }})
+                  </el-button>
+                </el-col>
+              </el-row>
+
+              <!-- 已掌握词语列表 -->
+              <div v-if="showMasteredWords" class="mastered-words-panel">
+                <div class="mastered-words-header">
+                  <span>已掌握词语 ({{ config.passiveLearningMasteredWords.length }} 个词语)</span>
+                  <el-button size="small" type="danger" @click="clearMasteredWords">清空已掌握</el-button>
+                </div>
+                <div class="mastered-words-list">
+                  <div v-for="(word, index) in config.passiveLearningMasteredWords" :key="index" class="mastered-item">
+                    <span>{{ word }}</span>
+                    <el-button size="small" type="danger" @click="unmarkAsMastered(word)">取消掌握</el-button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- 主题设置 -->
@@ -1084,6 +1145,90 @@ const toggleFloatingBall = (val: boolean) => {
 // 自定义快捷键相关
 const showCustomHotkeyDialog = ref(false);
 const showCustomMouseHotkeyDialog = ref(false);
+
+// 生词本和已掌握词语管理
+const showVocabularyBook = ref(false);
+const showMasteredWords = ref(false);
+
+// 生词本管理方法
+const clearVocabularyBook = () => {
+  ElMessageBox.confirm(
+    '确定要清空生词本吗？此操作不可恢复。',
+    '清空生词本',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+    config.value.passiveLearningVocabularyBook = [];
+    ElMessage({
+      message: '已清空生词本',
+      type: 'success',
+      duration: 2000
+    });
+  }).catch(() => {
+    // 用户取消操作
+  });
+};
+
+const removeFromVocabularyBook = (word) => {
+  const index = config.value.passiveLearningVocabularyBook.indexOf(word);
+  if (index > -1) {
+    config.value.passiveLearningVocabularyBook.splice(index, 1);
+    ElMessage({
+      message: `已从生词本移除: ${word}`,
+      type: 'success',
+      duration: 2000
+    });
+  }
+};
+
+const markAsMastered = (word) => {
+  if (!config.value.passiveLearningMasteredWords.includes(word)) {
+    config.value.passiveLearningMasteredWords.push(word);
+    // 从生词本移除
+    removeFromVocabularyBook(word);
+    ElMessage({
+      message: `已标记为掌握: ${word}`,
+      type: 'success',
+      duration: 2000
+    });
+  }
+};
+
+const clearMasteredWords = () => {
+  ElMessageBox.confirm(
+    '确定要清空已掌握词语吗？此操作不可恢复。',
+    '清空已掌握词语',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+    config.value.passiveLearningMasteredWords = [];
+    ElMessage({
+      message: '已清空已掌握词语',
+      type: 'success',
+      duration: 2000
+    });
+  }).catch(() => {
+    // 用户取消操作
+  });
+};
+
+const unmarkAsMastered = (word) => {
+  const index = config.value.passiveLearningMasteredWords.indexOf(word);
+  if (index > -1) {
+    config.value.passiveLearningMasteredWords.splice(index, 1);
+    ElMessage({
+      message: `已取消掌握标记: ${word}`,
+      type: 'success',
+      duration: 2000
+    });
+  }
+};
 
 // 配置导入导出相关
 const showExportConfig = ref(false);
@@ -1779,6 +1924,54 @@ const validateConfig = (configData: any): boolean => {
   margin: 8px 0;
   border: 1px solid rgba(103, 194, 58, 0.2);
   position: relative;
+}
+
+/* 生词本面板样式 */
+.vocabulary-book-panel, .mastered-words-panel {
+  background: rgba(103, 194, 58, 0.05);
+  border: 1px solid rgba(103, 194, 58, 0.2);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.vocabulary-book-header, .mastered-words-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+.vocabulary-book-list, .mastered-words-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vocabulary-item, .mastered-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  font-size: 12px;
+}
+
+.vocabulary-item span, .mastered-item span {
+  flex: 1;
+  color: #333;
+}
+
+.vocabulary-item .el-button, .mastered-item .el-button {
+  margin-left: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
 }
 
 .passive-learning-settings::before {

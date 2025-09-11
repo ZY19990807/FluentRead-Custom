@@ -94,6 +94,8 @@ class PassiveLearningManager {
         console.log('被动学习模式已启用，开始启动...');
         this.state.isEnabled = true;
         this.loadLearnedWords();
+        this.loadVocabularyBook();
+        this.loadMasteredWords();
         
         // 临时调试：清空学习记录以便测试
         console.log('当前已学习词语数量:', this.state.learnedWords.size);
@@ -386,6 +388,12 @@ class PassiveLearningManager {
                 continue;
             }
             
+            // 检查是否在已掌握词语中
+            if (config.passiveLearningMasteredWords.includes(word)) {
+                console.log('词语已掌握，跳过:', word);
+                continue;
+            }
+            
             // 过滤掉已学习的词语
             if (config.passiveLearningRecord && this.state.learnedWords.has(word)) {
                 console.log('词语已学习，跳过:', word);
@@ -440,6 +448,9 @@ class PassiveLearningManager {
                 const translation = await this.translateWord(wordInfo.text);
                 if (translation && translation !== wordInfo.text) {
                     this.replaceWordInText(wordInfo, translation, textNode);
+                    
+                    // 添加到生词本
+                    this.addToVocabularyBook(wordInfo.text);
                     
                     // 记录已学习的词语
                     if (config.passiveLearningRecord) {
@@ -555,6 +566,9 @@ class PassiveLearningManager {
         // 添加悬停显示原文的功能
         element.addEventListener('mouseenter', this.showOriginalText);
         element.addEventListener('mouseleave', this.hideOriginalText);
+        
+        // 添加右键菜单功能
+        element.addEventListener('contextmenu', this.handleRightClick);
     }
 
     // 显示原文
@@ -571,6 +585,90 @@ class PassiveLearningManager {
     private hideOriginalText = () => {
         this.hideTooltip();
     };
+
+    // 处理右键点击
+    private handleRightClick = (event: Event) => {
+        event.preventDefault();
+        const element = event.target as Element;
+        const originalText = element.getAttribute('data-original-text');
+        
+        if (originalText) {
+            this.showContextMenu(event as MouseEvent, originalText);
+        }
+    };
+
+    // 显示右键菜单
+    private showContextMenu(event: MouseEvent, word: string) {
+        // 移除已存在的菜单
+        const existingMenu = document.querySelector('.fluent-read-context-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+
+        const menu = document.createElement('div');
+        menu.className = 'fluent-read-context-menu';
+        menu.style.cssText = `
+            position: fixed;
+            top: ${event.clientY}px;
+            left: ${event.clientX}px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10000;
+            padding: 4px 0;
+            min-width: 120px;
+        `;
+
+        // 检查是否已掌握
+        const isMastered = config.passiveLearningMasteredWords.includes(word);
+        
+        const markItem = document.createElement('div');
+        markItem.style.cssText = `
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #333;
+        `;
+        markItem.textContent = isMastered ? '取消掌握标记' : '标记为已掌握';
+        markItem.addEventListener('click', () => {
+            if (isMastered) {
+                this.unmarkAsMastered(word);
+            } else {
+                this.markAsMastered(word);
+            }
+            menu.remove();
+        });
+
+        const removeItem = document.createElement('div');
+        removeItem.style.cssText = `
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+        `;
+        removeItem.textContent = '从生词本移除';
+        removeItem.addEventListener('click', () => {
+            this.removeFromVocabularyBook(word);
+            menu.remove();
+        });
+
+        menu.appendChild(markItem);
+        menu.appendChild(removeItem);
+        document.body.appendChild(menu);
+
+        // 点击其他地方关闭菜单
+        const closeMenu = (e: Event) => {
+            if (!menu.contains(e.target as Node)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+        }, 100);
+    }
 
     // 显示提示框
     private showTooltip(event: Event, text: string) {
@@ -683,8 +781,92 @@ class PassiveLearningManager {
         return {
             learnedWordsCount: this.state.learnedWords.size,
             processedElementsCount: this.state.processedElements.size,
-            translationCacheSize: this.state.translationCache.size
+            translationCacheSize: this.state.translationCache.size,
+            vocabularyBookCount: config.passiveLearningVocabularyBook.length,
+            masteredWordsCount: config.passiveLearningMasteredWords.length
         };
+    }
+
+    // 添加词语到生词本
+    addToVocabularyBook(word: string) {
+        if (!config.passiveLearningVocabularyBook.includes(word)) {
+            config.passiveLearningVocabularyBook.push(word);
+            this.saveVocabularyBook();
+            console.log('已添加到生词本:', word);
+        }
+    }
+
+    // 从生词本移除词语
+    removeFromVocabularyBook(word: string) {
+        const index = config.passiveLearningVocabularyBook.indexOf(word);
+        if (index > -1) {
+            config.passiveLearningVocabularyBook.splice(index, 1);
+            this.saveVocabularyBook();
+            console.log('已从生词本移除:', word);
+        }
+    }
+
+    // 标记词语为已掌握
+    markAsMastered(word: string) {
+        if (!config.passiveLearningMasteredWords.includes(word)) {
+            config.passiveLearningMasteredWords.push(word);
+            this.saveMasteredWords();
+            console.log('已标记为掌握:', word);
+        }
+    }
+
+    // 取消掌握标记
+    unmarkAsMastered(word: string) {
+        const index = config.passiveLearningMasteredWords.indexOf(word);
+        if (index > -1) {
+            config.passiveLearningMasteredWords.splice(index, 1);
+            this.saveMasteredWords();
+            console.log('已取消掌握标记:', word);
+        }
+    }
+
+    // 保存生词本到localStorage
+    private saveVocabularyBook() {
+        try {
+            localStorage.setItem('fluent-read-vocabulary-book', JSON.stringify(config.passiveLearningVocabularyBook));
+        } catch (error) {
+            console.warn('保存生词本失败:', error);
+        }
+    }
+
+    // 保存已掌握词语到localStorage
+    private saveMasteredWords() {
+        try {
+            localStorage.setItem('fluent-read-mastered-words', JSON.stringify(config.passiveLearningMasteredWords));
+        } catch (error) {
+            console.warn('保存已掌握词语失败:', error);
+        }
+    }
+
+    // 加载生词本
+    private loadVocabularyBook() {
+        try {
+            const saved = localStorage.getItem('fluent-read-vocabulary-book');
+            if (saved) {
+                config.passiveLearningVocabularyBook = JSON.parse(saved);
+                console.log('已加载生词本，共', config.passiveLearningVocabularyBook.length, '个词语');
+            }
+        } catch (error) {
+            console.warn('加载生词本失败:', error);
+        }
+    }
+
+    // 加载已掌握词语
+    private loadMasteredWords() {
+        try {
+            const saved = localStorage.getItem('fluent-read-mastered-words');
+            if (saved) {
+                config.passiveLearningMasteredWords = JSON.parse(saved);
+                console.log('已加载已掌握词语，共', config.passiveLearningMasteredWords.length, '个词语');
+            }
+        } catch (error) {
+            console.warn('加载已掌握词语失败:', error);
+        }
     }
 
     // 检查是否已启用
