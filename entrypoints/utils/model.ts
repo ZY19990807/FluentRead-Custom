@@ -57,6 +57,14 @@ export class Config {
     passiveLearningDensity: string; // 被动学习替换密度
     passiveLearningDisplayMode: string; // 被动学习显示方式
     passiveLearningRecord: boolean; // 是否启用学习记录
+    passiveLearningSmartDisplay: boolean; // 智能展示模式
+    passiveLearningMaxWordsPerNode: number; // 每节点最大替换数
+    passiveLearningWordLibrarySource: string; // 词库来源
+    passiveLearningWordLibraryLevel: string; // 词库等级
+    passiveLearningVocabularyBook: string[]; // 生词本
+    passiveLearningMasteredWords: string[]; // 已掌握词语
+    passiveLearningFamiliarityThreshold: number; // 熟悉度阈值
+    passiveLearningWordLengthPreference: string; // 词语长度偏好
 
     constructor() {
         this.on = true;
@@ -106,6 +114,14 @@ export class Config {
         this.passiveLearningDensity = 'light'; // 默认轻度替换
         this.passiveLearningDisplayMode = 'replace'; // 默认直接替换
         this.passiveLearningRecord = true; // 默认启用学习记录
+        this.passiveLearningSmartDisplay = true; // 默认启用智能展示模式
+        this.passiveLearningMaxWordsPerNode = 1; // 默认每节点最多1个词
+        this.passiveLearningWordLibrarySource = 'page'; // 默认使用页面统计
+        this.passiveLearningWordLibraryLevel = '1-3'; // 默认1-3级词汇
+        this.passiveLearningVocabularyBook = []; // 生词本初始为空
+        this.passiveLearningMasteredWords = []; // 已掌握词语初始为空
+        this.passiveLearningFamiliarityThreshold = 0.5; // 默认熟悉度阈值0.5
+        this.passiveLearningWordLengthPreference = 'short'; // 默认偏好短词语
     }
 }
 

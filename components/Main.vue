@@ -456,6 +456,88 @@
                 </el-col>
               </el-row>
 
+              <!-- 智能展示模式 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="20" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="智能展示模式：根据翻译结果长度自动选择显示方式，长翻译使用括号模式，短翻译使用直接替换" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">智能展示模式<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="4" class="flex-end">
+                  <el-switch v-model="config.passiveLearningSmartDisplay" inline-prompt active-text="启用" inactive-text="禁用" />
+                </el-col>
+              </el-row>
+
+              <!-- 每节点最大替换数 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="12" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="控制每个文本节点最多替换的词语数量，避免页面被过度割裂" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">每节点最大替换数<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="12">
+                  <el-select v-model="config.passiveLearningMaxWordsPerNode" placeholder="请选择最大替换数">
+                    <el-option class="select-left" v-for="item in options.passiveLearningMaxWordsPerNode" :key="item.value" 
+                               :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-col>
+              </el-row>
+
+              <!-- 词库来源 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="12" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="选择词语来源：页面统计、HSK词库、CEFR词库或自定义词库" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">词库来源<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="12">
+                  <el-select v-model="config.passiveLearningWordLibrarySource" placeholder="请选择词库来源">
+                    <el-option class="select-left" v-for="item in options.passiveLearningWordLibrarySource" :key="item.value" 
+                               :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-col>
+              </el-row>
+
+              <!-- 词库等级 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="12" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="选择词库等级，优先翻译对应等级的词汇" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">词库等级<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="12">
+                  <el-select v-model="config.passiveLearningWordLibraryLevel" placeholder="请选择词库等级">
+                    <el-option class="select-left" v-for="item in options.passiveLearningWordLibraryLevel" :key="item.value" 
+                               :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-col>
+              </el-row>
+
+              <!-- 词语长度偏好 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="12" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="选择词语长度偏好，短词语更适合被动学习" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">词语长度偏好<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="12">
+                  <el-select v-model="config.passiveLearningWordLengthPreference" placeholder="请选择长度偏好">
+                    <el-option class="select-left" v-for="item in options.passiveLearningWordLengthPreference" :key="item.value" 
+                               :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-col>
+              </el-row>
+
               <!-- 学习记录 -->
               <el-row class="margin-bottom margin-left-2em">
                 <el-col :span="20" class="lightblue rounded-corner">

@@ -57,17 +57,22 @@ export default defineContentScript({
         mountNewApiComponent();
 
         // 初始化被动学习模式
+        console.log('=== 内容脚本：被动学习模式初始化 ===');
         console.log('内容脚本：检查被动学习模式配置', config.passiveLearningMode);
-        
-        // 强制测试 - 无论配置如何都尝试启动
-        console.log('强制启动被动学习模式进行测试...');
-        await passiveLearningManager.init();
+        console.log('内容脚本：config对象', config);
         
         if (config.passiveLearningMode) {
-            console.log('内容脚本：被动学习模式已启用');
+            console.log('内容脚本：被动学习模式已启用，开始初始化...');
+            try {
+                await passiveLearningManager.init();
+                console.log('内容脚本：被动学习模式初始化完成');
+            } catch (error) {
+                console.error('内容脚本：被动学习模式初始化失败', error);
+            }
         } else {
-            console.log('内容脚本：被动学习模式已禁用，但已强制启动测试');
+            console.log('内容脚本：被动学习模式已禁用');
         }
+        console.log('=== 内容脚本：被动学习模式初始化结束 ===');
 
         // 监听配置变化，重新初始化被动学习模式
         const checkPassiveLearningMode = () => {

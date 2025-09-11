@@ -52,14 +52,29 @@ class PassiveLearningManager {
         heavy: 0.4     // 40%
     };
 
+    // 常见虚词/功能词，降低被选中概率或直接跳过
+    private STOPWORDS = new Set([
+        '的','地','得','了','著','着','和','与','及','并','而','或','又','被','把','在','对','向','往','给','将','把',
+        '是','有','无','没','不','呢','吗','吧','啊','呀','哦','嗯','哇','嘛','啦','喽','哦','哟','咯',
+        '这','那','哪','啥','什么','一个','一些','自己','我们','你们','他们','她们','它们','其','此','其余','各自',
+        '也','都','还','就','又','再','才','并','且','乃至','甚至','以及','或者','如果','因为','所以','但是','然而',
+    ]);
+
+    // 全页候选词池
+    private candidateWordPool: WordInfo[] = [];
+    private isWordPoolBuilt = false;
+
     // 初始化被动学习模式
     async init() {
-        console.log('被动学习模式初始化，配置状态:', config.passiveLearningMode);
+        console.log('=== 被动学习模式初始化开始 ===');
+        console.log('被动学习模式配置状态:', config.passiveLearningMode);
         console.log('当前配置:', {
             passiveLearningMode: config.passiveLearningMode,
             passiveLearningDensity: config.passiveLearningDensity,
             passiveLearningDisplayMode: config.passiveLearningDisplayMode,
-            passiveLearningRecord: config.passiveLearningRecord
+            passiveLearningRecord: config.passiveLearningRecord,
+            passiveLearningSmartDisplay: config.passiveLearningSmartDisplay,
+            passiveLearningMaxWordsPerNode: config.passiveLearningMaxWordsPerNode
         });
         
         // 设置翻译配置为中文到英文
@@ -70,13 +85,26 @@ class PassiveLearningManager {
         
         console.log('翻译配置已设置为:', { from: config.from, to: config.to });
         
-        // 强制启动，忽略配置检查
-        console.log('强制启动被动学习模式...');
+        // 检查被动学习模式是否启用
+        if (!config.passiveLearningMode) {
+            console.log('被动学习模式未启用，退出初始化');
+            return;
+        }
         
+        console.log('被动学习模式已启用，开始启动...');
         this.state.isEnabled = true;
         this.loadLearnedWords();
+        
+        // 临时调试：清空学习记录以便测试
+        console.log('当前已学习词语数量:', this.state.learnedWords.size);
+        if (this.state.learnedWords.size > 0) {
+            console.log('清空学习记录以便测试...');
+            this.clearLearnedWords();
+        }
+        
         this.startPassiveLearning();
         console.log('被动学习模式已启动');
+        console.log('=== 被动学习模式初始化完成 ===');
     }
 
     // 停止被动学习模式
@@ -92,6 +120,9 @@ class PassiveLearningManager {
 
         console.log('开始被动学习，处理页面内容...');
         
+        // 构建候选词池
+        this.buildCandidateWordPool();
+        
         // 添加一个测试函数来强制测试翻译
         this.testTranslation();
         
@@ -100,6 +131,64 @@ class PassiveLearningManager {
         
         // 监听页面变化
         this.observePageChanges();
+    }
+
+    // 构建全页候选词池
+    private buildCandidateWordPool() {
+        console.log('构建全页候选词池...');
+        this.candidateWordPool = [];
+        const wordFrequency = new Map<string, { count: number, words: WordInfo[] }>();
+
+        // 扫描全页文本节点
+        const textNodes = this.getTextNodes(document.body);
+        
+        for (const node of textNodes) {
+            const words = this.extractChineseWords(node.textContent || '', node);
+            
+            for (const word of words) {
+                // 过滤虚词
+                if (this.STOPWORDS.has(word.text)) {
+                    continue;
+                }
+                
+                // 统计频次
+                if (wordFrequency.has(word.text)) {
+                    const existing = wordFrequency.get(word.text)!;
+                    existing.count++;
+                    existing.words.push(word);
+                } else {
+                    wordFrequency.set(word.text, { count: 1, words: [word] });
+                }
+            }
+        }
+
+        // 按频次×长度×长度权重排序，优先选择短词语
+        const sortedWords = Array.from(wordFrequency.entries())
+            .map(([text, data]) => {
+                const lengthWeight = text.length <= 4 ? 1.0 : 0.5; // 短词语权重更高
+                const score = data.count * text.length * lengthWeight;
+                return {
+                    text,
+                    count: data.count,
+                    length: text.length,
+                    score: score,
+                    words: data.words
+                };
+            })
+            .sort((a, b) => b.score - a.score);
+
+        // 限制候选词池大小
+        const maxPoolSize = 100;
+        const selectedWords = sortedWords.slice(0, maxPoolSize);
+        
+        for (const wordData of selectedWords) {
+            // 选择第一个出现位置的WordInfo
+            this.candidateWordPool.push(wordData.words[0]);
+        }
+
+        console.log(`候选词池构建完成，共${this.candidateWordPool.length}个词语`);
+        console.log('前10个候选词:', this.candidateWordPool.slice(0, 10).map(w => w.text));
+        this.isWordPoolBuilt = true;
     }
 
     // 测试翻译功能
@@ -263,17 +352,47 @@ class PassiveLearningManager {
         const words: WordInfo[] = [];
         let match;
         
+        console.log('提取中文词语 - 输入文本:', text.substring(0, 50) + '...');
+        
         while ((match = this.chineseWordRegex.exec(text)) !== null) {
             const word = match[0];
+            console.log('找到中文词语:', word, '长度:', word.length);
             
-            // 过滤掉太短或太长的词语
-            if (word.length < 2 || word.length > 10) continue;
+            // 根据长度偏好过滤词语
+            const lengthPreference = config.passiveLearningWordLengthPreference || 'short';
+            let maxLength = 6;
+            let minLength = 2;
+            
+            switch (lengthPreference) {
+                case 'short':
+                    maxLength = 3;
+                    break;
+                case 'medium':
+                    maxLength = 4;
+                    break;
+                case 'long':
+                    maxLength = 6;
+                    break;
+            }
+            
+            if (word.length < minLength || word.length > maxLength) {
+                console.log('词语长度不符合偏好设置，跳过:', word, '长度:', word.length, '偏好:', lengthPreference);
+                continue;
+            }
+            
+            // 检查是否在STOPWORDS中
+            if (this.STOPWORDS.has(word)) {
+                console.log('词语在STOPWORDS中，跳过:', word);
+                continue;
+            }
             
             // 过滤掉已学习的词语
             if (config.passiveLearningRecord && this.state.learnedWords.has(word)) {
+                console.log('词语已学习，跳过:', word);
                 continue;
             }
 
+            console.log('词语通过所有过滤条件，添加到候选列表:', word);
             words.push({
                 text: word,
                 startIndex: match.index,
@@ -283,14 +402,31 @@ class PassiveLearningManager {
             });
         }
 
+        console.log('提取完成，共找到词语数量:', words.length);
         return words;
     }
 
     // 根据密度选择要翻译的词语
     private selectWordsForTranslation(words: WordInfo[]): WordInfo[] {
+        // 每节点最大替换数限制
+        const maxWordsPerNode = config.passiveLearningMaxWordsPerNode || 1;
+        
+        // 从候选词池中优先选择
+        const candidateWords = this.candidateWordPool.filter(candidate => 
+            words.some(word => word.text === candidate.text)
+        );
+        
+        // 如果候选词池中有匹配的词，优先选择
+        if (candidateWords.length > 0) {
+            const selected = candidateWords.slice(0, maxWordsPerNode);
+            console.log('从候选词池选择:', selected.map(w => w.text));
+            return selected;
+        }
+        
+        // 否则从当前文本节点中选择
         const densityKey = config.passiveLearningDensity as 'light' | 'medium' | 'heavy';
         const density = this.densityConfig[densityKey] || 0.1;
-        const targetCount = Math.max(1, Math.floor(words.length * density));
+        const targetCount = Math.min(maxWordsPerNode, Math.max(1, Math.floor(words.length * density)));
         
         // 随机选择词语
         const shuffled = [...words].sort(() => Math.random() - 0.5);
@@ -356,18 +492,60 @@ class PassiveLearningManager {
         const before = text.substring(0, wordInfo.startIndex);
         const after = text.substring(wordInfo.endIndex);
         
+        // 智能展示策略
+        const displayMode = this.getDisplayMode(wordInfo.text, translation);
+        
+        console.log('显示模式判断:', {
+            smartDisplay: config.passiveLearningSmartDisplay,
+            userDisplayMode: config.passiveLearningDisplayMode,
+            finalDisplayMode: displayMode,
+            originalText: wordInfo.text,
+            translation: translation
+        });
+        
         let replacement: string;
-        if (config.passiveLearningDisplayMode === 'bracket') {
+        if (displayMode === 'bracket') {
             replacement = `${wordInfo.text}(${translation})`;
         } else {
             replacement = translation;
         }
+
+        console.log('替换结果:', {
+            before: before,
+            replacement: replacement,
+            after: after,
+            finalText: before + replacement + after
+        });
 
         const newText = before + replacement + after;
         textNode.textContent = newText;
 
         // 添加样式类
         this.addTranslationStyles(textNode.parentElement!);
+    }
+
+    // 智能展示模式判断
+    private getDisplayMode(originalText: string, translation: string): 'replace' | 'bracket' {
+        // 如果智能展示模式关闭，完全跟随用户设置
+        if (!config.passiveLearningSmartDisplay) {
+            return config.passiveLearningDisplayMode as 'replace' | 'bracket';
+        }
+
+        // 智能展示模式开启：根据翻译结果智能选择
+        // 判断翻译结果是否过长
+        const lengthRatio = translation.length / originalText.length;
+        const isTooLong = lengthRatio > 2;
+        
+        // 判断翻译结果是否包含空格或特殊字符
+        const hasSpaces = translation.includes(' ') || translation.includes('-') || translation.includes('_');
+        
+        // 如果翻译结果过长或包含特殊字符，使用括号模式
+        if (isTooLong || hasSpaces) {
+            return 'bracket';
+        }
+
+        // 否则使用直接替换
+        return 'replace';
     }
 
     // 添加翻译样式
@@ -497,6 +675,7 @@ class PassiveLearningManager {
     clearLearnedWords() {
         this.state.learnedWords.clear();
         localStorage.removeItem('fluent-read-learned-words');
+        console.log('已清空学习记录');
     }
 
     // 获取学习统计

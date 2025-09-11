@@ -397,6 +397,33 @@ export const options = {
         {value: "replace", label: "直接替换"},
         {value: "bracket", label: "中文(英文)"},
     ],
+    // 被动学习模式每节点最大替换数选项
+    passiveLearningMaxWordsPerNode: [
+        {value: 1, label: "1个词"},
+        {value: 2, label: "2个词"},
+        {value: 3, label: "3个词"},
+    ],
+    // 被动学习模式词库来源选项
+    passiveLearningWordLibrarySource: [
+        {value: "page", label: "页面统计"},
+        {value: "hsk", label: "HSK词库"},
+        {value: "cefr", label: "CEFR词库"},
+        {value: "custom", label: "自定义词库"},
+    ],
+    // 被动学习模式词库等级选项
+    passiveLearningWordLibraryLevel: [
+        {value: "1-3", label: "1-3级 (基础)"},
+        {value: "4-6", label: "4-6级 (中级)"},
+        {value: "A1-A2", label: "A1-A2 (初级)"},
+        {value: "B1-B2", label: "B1-B2 (中级)"},
+        {value: "C1-C2", label: "C1-C2 (高级)"},
+    ],
+    // 被动学习模式词语长度偏好选项
+    passiveLearningWordLengthPreference: [
+        {value: "short", label: "短词语 (2-3字)"},
+        {value: "medium", label: "中等词语 (2-4字)"},
+        {value: "long", label: "长词语 (2-6字)"},
+    ],
 };
 
 export const defaultOption = {
@@ -419,5 +446,11 @@ export const defaultOption = {
     floatingBallHotkey: "Alt+T", // 默认悬浮球快捷键
     inputBoxTranslationTrigger: "disabled", // 默认关闭输入框翻译
     inputBoxTranslationTarget: "en", // 默认翻译成英文
+    // 被动学习模式选项
+    passiveLearningSmartDisplay: true, // 默认启用智能展示模式
+    passiveLearningMaxWordsPerNode: 1, // 默认每节点最多1个词
+    passiveLearningWordLibrarySource: "page", // 默认使用页面统计
+    passiveLearningWordLibraryLevel: "1-3", // 默认1-3级词汇
+    passiveLearningFamiliarityThreshold: 0.5, // 默认熟悉度阈值0.5
 };
 
