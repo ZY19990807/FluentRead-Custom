@@ -295,3 +295,56 @@
     border-radius: 3px;
     border: 1px solid #eee;
 }
+
+/* 被动学习模式样式 */
+.fluent-read-passive-learning {
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: help;
+}
+
+.fluent-read-passive-learning:hover {
+    background-color: rgba(103, 194, 58, 0.1);
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(103, 194, 58, 0.2);
+}
+
+.fluent-read-passive-tooltip {
+    position: absolute;
+    z-index: 10001;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    max-width: 250px;
+    word-wrap: break-word;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fluent-read-passive-tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 被动学习模式动画效果 */
+@keyframes passive-learning-highlight {
+    0% {
+        background-color: rgba(103, 194, 58, 0.1);
+    }
+    50% {
+        background-color: rgba(103, 194, 58, 0.2);
+    }
+    100% {
+        background-color: rgba(103, 194, 58, 0.1);
+    }
+}
+
+.fluent-read-passive-learning.newly-translated {
+    animation: passive-learning-highlight 2s ease-in-out;
+}

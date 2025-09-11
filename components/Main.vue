@@ -398,11 +398,80 @@
       </el-col>
     </el-row>
 
-    <!-- 高级选项-->
-    <el-collapse class="margin-left-2em margin-bottom">
-      <el-collapse-item title="高级选项">
+        <!-- 高级选项-->
+        <el-collapse class="margin-left-2em margin-bottom">
+          <el-collapse-item title="高级选项">
 
-        <!-- 主题设置 -->
+            <!-- 被动学习模式 -->
+            <el-row class="margin-bottom margin-left-2em margin-top-2em">
+              <el-col :span="20" class="lightblue rounded-corner">
+                <el-tooltip class="box-item" effect="dark" content="被动学习模式：自动将中文网页中的部分词语替换为英文，帮助用户在阅读中学习英语词汇" placement="top-start" :show-after="500">
+                  <span class="popup-text popup-vertical-left">
+                    <span class="new-feature-badge">新</span>
+                    被动学习模式
+                    <el-icon class="icon-margin">
+                      <ChatDotRound />
+                    </el-icon>
+                  </span>
+                </el-tooltip>
+              </el-col>
+              <el-col :span="4" class="flex-end">
+                <el-switch v-model="config.passiveLearningMode" inline-prompt active-text="启用" inactive-text="禁用" />
+              </el-col>
+            </el-row>
+
+            <!-- 被动学习模式设置 -->
+            <div v-if="config.passiveLearningMode" class="passive-learning-settings">
+              <!-- 替换密度 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="12" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="控制页面中词语替换的比例，密度越高替换的词语越多" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">替换密度<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="12">
+                  <el-select v-model="config.passiveLearningDensity" placeholder="请选择替换密度">
+                    <el-option class="select-left" v-for="item in options.passiveLearningDensity" :key="item.value" 
+                               :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-col>
+              </el-row>
+
+              <!-- 显示方式 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="12" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="选择词语替换的显示方式：直接替换或保留原文并添加英文" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">显示方式<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="12">
+                  <el-select v-model="config.passiveLearningDisplayMode" placeholder="请选择显示方式">
+                    <el-option class="select-left" v-for="item in options.passiveLearningDisplayMode" :key="item.value" 
+                               :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-col>
+              </el-row>
+
+              <!-- 学习记录 -->
+              <el-row class="margin-bottom margin-left-2em">
+                <el-col :span="20" class="lightblue rounded-corner">
+                  <el-tooltip class="box-item" effect="dark" content="记录已学习的词语，避免重复翻译相同的词汇" placement="top-start" :show-after="500">
+                    <span class="popup-text popup-vertical-left">学习记录<el-icon class="icon-margin">
+                        <ChatDotRound />
+                      </el-icon></span>
+                  </el-tooltip>
+                </el-col>
+                <el-col :span="4" class="flex-end">
+                  <el-switch v-model="config.passiveLearningRecord" inline-prompt active-text="启用" inactive-text="禁用" />
+                </el-col>
+              </el-row>
+            </div>
+
+            <!-- 主题设置 -->
         <el-row class="margin-bottom margin-left-2em margin-top-2em">
           <el-col :span="12" class="lightblue rounded-corner">
             <span class="popup-text popup-vertical-left">主题设置</span>
@@ -841,6 +910,23 @@ watch(() => config.value.selectionTranslatorMode, (newMode) => {
         browser.tabs.sendMessage(tab.id, { 
           type: 'updateSelectionTranslatorMode',
           mode: newMode 
+        }).catch(() => {
+          // 忽略发送失败的错误（可能是页面未加载内容脚本）
+        });
+      }
+    });
+  });
+});
+
+// 监听被动学习模式变化
+watch(() => config.value.passiveLearningMode, (newMode) => {
+  // 向所有激活的标签页发送消息
+  browser.tabs.query({}).then(tabs => {
+    tabs.forEach(tab => {
+      if (tab.id) {
+        browser.tabs.sendMessage(tab.id, { 
+          type: 'togglePassiveLearningMode',
+          isEnabled: newMode 
         }).catch(() => {
           // 忽略发送失败的错误（可能是页面未加载内容脚本）
         });
@@ -1598,5 +1684,33 @@ const validateConfig = (configData: any): boolean => {
   font-size: 12px;
   margin-top: 4px;
   line-height: 1.4;
+}
+
+/* 被动学习模式设置样式 */
+.passive-learning-settings {
+  background: linear-gradient(135deg, 
+    rgba(103, 194, 58, 0.03) 0%, 
+    rgba(103, 194, 58, 0.01) 50%, 
+    rgba(64, 158, 255, 0.02) 100%);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid rgba(103, 194, 58, 0.2);
+  position: relative;
+}
+
+.passive-learning-settings::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(103, 194, 58, 0.1) 0%, 
+    rgba(64, 158, 255, 0.05) 100%);
+  border-radius: 8px;
+  z-index: -1;
+  opacity: 0.3;
 }
 </style>

@@ -386,6 +386,17 @@ export const options = {
         {value: "triple_equal", label: "连按三下等号(=)"},
         {value: "triple_dash", label: "连按三下短横线(-)"},
     ],
+    // 被动学习模式替换密度选项
+    passiveLearningDensity: [
+        {value: "light", label: "轻度 (10%)"},
+        {value: "medium", label: "中度 (20%)"},
+        {value: "heavy", label: "重度 (40%)"},
+    ],
+    // 被动学习模式显示方式选项
+    passiveLearningDisplayMode: [
+        {value: "replace", label: "直接替换"},
+        {value: "bracket", label: "中文(英文)"},
+    ],
 };
 
 export const defaultOption = {

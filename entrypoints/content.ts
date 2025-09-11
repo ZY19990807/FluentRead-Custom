@@ -10,6 +10,7 @@ import { cancelAllTranslations, translateText } from "@/entrypoints/utils/transl
 import { createApp } from 'vue';
 import TranslationStatus from '@/components/TranslationStatus.vue';
 import { mountNewApiComponent } from "@/entrypoints/utils/newApi";
+import { passiveLearningManager } from "@/entrypoints/utils/passiveLearning";
 
 export default defineContentScript({
     matches: ['<all_urls>'],  // 匹配所有页面
@@ -55,6 +56,33 @@ export default defineContentScript({
 
         mountNewApiComponent();
 
+        // 初始化被动学习模式
+        console.log('内容脚本：检查被动学习模式配置', config.passiveLearningMode);
+        
+        // 强制测试 - 无论配置如何都尝试启动
+        console.log('强制启动被动学习模式进行测试...');
+        await passiveLearningManager.init();
+        
+        if (config.passiveLearningMode) {
+            console.log('内容脚本：被动学习模式已启用');
+        } else {
+            console.log('内容脚本：被动学习模式已禁用，但已强制启动测试');
+        }
+
+        // 监听配置变化，重新初始化被动学习模式
+        const checkPassiveLearningMode = () => {
+            if (config.passiveLearningMode && !passiveLearningManager.isEnabled()) {
+                console.log('配置变化：启动被动学习模式');
+                passiveLearningManager.init();
+            } else if (!config.passiveLearningMode && passiveLearningManager.isEnabled()) {
+                console.log('配置变化：停止被动学习模式');
+                passiveLearningManager.stop();
+            }
+        };
+
+        // 定期检查配置变化
+        setInterval(checkPassiveLearningMode, 1000);
+
         cache.cleaner();    // 检测是否清理缓存
 
         // background.ts
@@ -98,6 +126,26 @@ export default defineContentScript({
             return false;
         });
         
+        // 处理被动学习模式控制消息
+        browser.runtime.onMessage.addListener((message: any, sender: any, sendResponse: () => void) => {
+            if (message.type === 'togglePassiveLearningMode') {
+                console.log('收到被动学习模式切换消息:', message.isEnabled);
+                // 更新配置
+                config.passiveLearningMode = message.isEnabled;
+                
+                if (message.isEnabled) {
+                    console.log('启动被动学习模式');
+                    passiveLearningManager.init();
+                } else {
+                    console.log('停止被动学习模式');
+                    passiveLearningManager.stop();
+                }
+                sendResponse();
+                return true;
+            }
+            return false;
+        });
+        
         // 处理右键菜单触发的全文翻译和撤销
         browser.runtime.onMessage.addListener((message: any, sender: any, sendResponse: (response?: any) => void) => {
             if (message.type === 'contextMenuTranslate') {
@@ -130,6 +178,8 @@ export default defineContentScript({
             unmountFloatingBall();
             // 移除划词翻译组件
             unmountSelectionTranslator();
+            // 停止被动学习模式
+            passiveLearningManager.stop();
         });
     }
 })

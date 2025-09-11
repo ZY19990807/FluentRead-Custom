@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>被动学习测试页面</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 4px solid #e74c3c;
+            padding-left: 15px;
+        }
+        
+        h3 {
+            color: #7f8c8d;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        
+        .vocab-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .vocab-item {
+            background: #e8f4fd;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .instructions {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+        }
+        
+        .instructions h4 {
+            color: #155724;
+            margin-top: 0;
+        }
+        
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 8px 0;
+            color: #155724;
+        }
+        
+        .test-content {
+            font-size: 16px;
+            line-height: 1.8;
+        }
+        
+        .button-group {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 被动学习功能测试页面</h1>
+        
+        <div class="instructions">
+            <h4>📋 测试步骤：</h4>
+            <ol>
+                <li>确保已安装并启用 FluentRead 扩展</li>
+                <li>在扩展弹窗中开启"被动学习模式"</li>
+                <li>选择"内置常用词" + "中级" + "轻度"替换</li>
+                <li>刷新此页面，观察词汇替换效果</li>
+                <li>右键点击替换的词汇，测试"标记为已掌握"功能</li>
+            </ol>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn" onclick="location.reload()">🔄 刷新页面</button>
+            <button class="btn btn-success" onclick="checkExtension()">✅ 检查扩展状态</button>
+            <button class="btn btn-warning" onclick="showInstructions()">📖 显示详细说明</button>
+        </div>
+        
+        <div id="status" class="status info" style="display: none;">
+            正在检查扩展状态...
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎯 测试内容一：日常生活词汇</h2>
+        <div class="test-section">
+            <div class="test-content">
+                <p>今天天气很好，我决定去公园散步。路上遇到了一个朋友，我们一起聊天，谈论了最近的工作和学习情况。他说他正在学习编程，想要成为一名软件工程师。我觉得这个想法很不错，因为现在互联网行业发展很快，有很多机会。</p>
+                
+                <p>下午我去了图书馆，借了几本关于人工智能的书籍。我对这个领域很感兴趣，特别是机器学习和深度学习技术。虽然这些概念比较复杂，但是通过不断学习，我相信能够掌握这些知识。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎯 测试内容二：技术专业词汇</h2>
+        <div class="test-section">
+            <div class="test-content">
+                <p>在软件开发过程中，我们需要使用各种工具和技术。前端开发主要涉及HTML、CSS和JavaScript，而后端开发则需要掌握数据库设计和API接口开发。现代应用程序通常采用微服务架构，这样可以提高系统的可扩展性和可维护性。</p>
+                
+                <p>云计算技术为软件开发带来了新的机遇。通过使用容器化技术如Docker，我们可以更轻松地部署和管理应用程序。同时，DevOps实践帮助我们实现了持续集成和持续部署，大大提高了开发效率。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎯 测试内容三：商务办公词汇</h2>
+        <div class="test-section">
+            <div class="test-content">
+                <p>在企业管理中，战略规划是非常重要的环节。我们需要分析市场趋势，制定合适的商业策略，并建立有效的团队协作机制。通过定期召开会议，我们可以及时沟通项目进展，解决遇到的问题。</p>
+                
+                <p>客户关系管理是公司成功的关键因素之一。我们需要了解客户需求，提供优质的产品和服务，建立长期的合作关系。同时，我们也要关注竞争对手的动态，保持市场竞争力。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎯 测试内容四：教育学习词汇</h2>
+        <div class="test-section">
+            <div class="test-content">
+                <p>教育是社会发展的重要基础。现代教育强调培养学生的创新思维和实践能力，而不仅仅是传授知识。通过项目式学习和合作学习，学生可以更好地掌握学习内容，提高解决问题的能力。</p>
+                
+                <p>在线教育平台为学习提供了新的可能性。学生可以根据自己的时间安排和学习进度，灵活选择课程内容。同时，人工智能技术也被应用到教育中，为个性化学习提供了技术支持。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎯 测试内容五：高频替换词汇</h2>
+        <div class="test-section">
+            <div class="highlight">
+                <p><strong>注意：</strong>以下词汇应该被优先替换，因为它们出现在内置词库中：</p>
+            </div>
+            
+            <div class="vocab-list">
+                <div class="vocab-item">学习</div>
+                <div class="vocab-item">工作</div>
+                <div class="vocab-item">生活</div>
+                <div class="vocab-item">家庭</div>
+                <div class="vocab-item">朋友</div>
+                <div class="vocab-item">时间</div>
+                <div class="vocab-item">今天</div>
+                <div class="vocab-item">明天</div>
+                <div class="vocab-item">现在</div>
+                <div class="vocab-item">吃饭</div>
+                <div class="vocab-item">睡觉</div>
+                <div class="vocab-item">看书</div>
+                <div class="vocab-item">听音乐</div>
+                <div class="vocab-item">看电影</div>
+                <div class="vocab-item">玩游戏</div>
+                <div class="vocab-item">运动</div>
+                <div class="vocab-item">旅游</div>
+                <div class="vocab-item">购物</div>
+                <div class="vocab-item">做饭</div>
+                <div class="vocab-item">学校</div>
+                <div class="vocab-item">医院</div>
+                <div class="vocab-item">银行</div>
+                <div class="vocab-item">商店</div>
+                <div class="vocab-item">餐厅</div>
+                <div class="vocab-item">公园</div>
+                <div class="vocab-item">图书馆</div>
+                <div class="vocab-item">博物馆</div>
+                <div class="vocab-item">车站</div>
+                <div class="vocab-item">机场</div>
+            </div>
+            
+            <div class="test-content">
+                <p>这些词汇应该被替换为对应的英文。你可以右键点击替换后的词汇，选择"标记为已掌握"来测试熟悉度衰减功能。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎯 测试内容六：长文本测试</h2>
+        <div class="test-section">
+            <div class="test-content">
+                <p>人工智能技术的发展正在改变我们的生活方式。从智能手机到自动驾驶汽车，从智能家居到医疗诊断，AI技术已经渗透到各个领域。机器学习算法能够从大量数据中学习模式，做出预测和决策。深度学习网络模拟人脑的神经网络结构，在图像识别、自然语言处理等任务中表现出色。</p>
+                
+                <p>然而，AI技术的发展也带来了一些挑战。数据隐私和安全问题日益突出，算法偏见可能导致不公平的结果。因此，我们需要在推动技术创新的同时，也要关注伦理和社会责任。政府、企业和学术界需要共同努力，制定相应的法规和标准，确保AI技术能够造福人类社会。</p>
+                
+                <p>未来，AI技术将继续快速发展。通用人工智能的实现可能还需要很长时间，但我们可以期待在特定领域看到更多突破。量子计算、脑机接口等新兴技术也将与AI结合，创造出更多可能性。作为个人，我们应该保持学习的态度，适应技术发展的变化，同时也要思考如何在AI时代中发挥自己的价值。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📊 测试结果检查</h2>
+        <div class="test-section">
+            <h3>✅ 基础功能检查：</h3>
+            <ul>
+                <li>页面加载后是否有词汇被替换为英文？</li>
+                <li>替换的词汇是否合理（不是虚词）？</li>
+                <li>替换后的文本是否仍然可读？</li>
+                <li>右键点击替换词汇是否出现"标记为已掌握"选项？</li>
+            </ul>
+            
+            <h3>✅ 高级功能检查：</h3>
+            <ul>
+                <li>生词本中是否记录了被替换的词汇？</li>
+                <li>标记为已掌握后，该词汇是否很少被再次替换？</li>
+                <li>不同词库来源的替换效果是否不同？</li>
+                <li>熟悉度衰减功能是否正常工作？</li>
+            </ul>
+            
+            <h3>✅ 性能检查：</h3>
+            <ul>
+                <li>页面加载速度是否正常？</li>
+                <li>替换过程是否流畅？</li>
+                <li>是否有明显的卡顿或错误？</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function checkExtension() {
+            const status = document.getElementById('status');
+            status.style.display = 'block';
+            status.className = 'status info';
+            status.textContent = '正在检查扩展状态...';
+            
+            // 检查是否有扩展注入的全局变量
+            if (window.vocabularyManager) {
+                status.className = 'status success';
+                status.textContent = '✅ 扩展已正确加载！被动学习功能可用。';
+            } else {
+                status.className = 'status warning';
+                status.textContent = '⚠️ 扩展可能未正确加载，请检查扩展是否启用。';
+            }
+        }
+        
+        function showInstructions() {
+            alert(`详细使用说明：
+
+1. 安装扩展：
+   - 在Chrome中打开 chrome://extensions/
+   - 开启开发者模式
+   - 加载 .output/chrome-mv3 文件夹
+
+2. 配置设置：
+   - 点击扩展图标
+   - 开启"被动学习模式"
+   - 选择词库来源和等级
+   - 开启"熟悉度衰减"
+
+3. 测试功能：
+   - 刷新此页面
+   - 观察词汇替换效果
+   - 右键点击替换词汇
+   - 查看生词本和已掌握列表
+
+4. 调整设置：
+   - 尝试不同的词库来源
+   - 调整替换强度
+   - 管理生词本和已掌握词汇`);
+        }
+        
+        // 页面加载完成后自动检查
+        window.addEventListener('load', function() {
+            setTimeout(checkExtension, 1000);
+        });
+    </script>
+</body>
+</html>
+

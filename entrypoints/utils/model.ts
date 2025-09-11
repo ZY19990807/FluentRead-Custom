@@ -53,6 +53,10 @@ export class Config {
     translationStatus: boolean; // 是否启用全文翻译进度面板
     inputBoxTranslationTrigger: string; // 输入框翻译触发方式
     inputBoxTranslationTarget: string; // 输入框翻译目标语言
+    passiveLearningMode: boolean; // 是否启用被动学习模式
+    passiveLearningDensity: string; // 被动学习替换密度
+    passiveLearningDisplayMode: string; // 被动学习显示方式
+    passiveLearningRecord: boolean; // 是否启用学习记录
 
     constructor() {
         this.on = true;
@@ -98,6 +102,10 @@ export class Config {
         this.translationStatus = true; // 默认启用翻译进度面板
         this.inputBoxTranslationTrigger = 'disabled'; // 默认关闭输入框翻译
         this.inputBoxTranslationTarget = 'en'; // 默认翻译成英文
+        this.passiveLearningMode = false; // 默认关闭被动学习模式
+        this.passiveLearningDensity = 'light'; // 默认轻度替换
+        this.passiveLearningDisplayMode = 'replace'; // 默认直接替换
+        this.passiveLearningRecord = true; // 默认启用学习记录
     }
 }
 
