@@ -11,7 +11,6 @@ import { cache } from './cache';
 interface PassiveLearningState {
     isEnabled: boolean;
     processedElements: Set<Element>;
-    learnedWords: Set<string>;
     translationCache: Map<string, string>;
 }
 
@@ -38,7 +37,6 @@ class PassiveLearningManager {
     private state: PassiveLearningState = {
         isEnabled: false,
         processedElements: new Set(),
-        learnedWords: new Set(),
         translationCache: new Map()
     };
 
@@ -72,7 +70,6 @@ class PassiveLearningManager {
             passiveLearningMode: config.passiveLearningMode,
             passiveLearningDensity: config.passiveLearningDensity,
             passiveLearningDisplayMode: config.passiveLearningDisplayMode,
-            passiveLearningRecord: config.passiveLearningRecord,
             passiveLearningSmartDisplay: config.passiveLearningSmartDisplay,
             passiveLearningMaxWordsPerNode: config.passiveLearningMaxWordsPerNode
         });
@@ -93,16 +90,9 @@ class PassiveLearningManager {
         
         console.log('被动学习模式已启用，开始启动...');
         this.state.isEnabled = true;
-        this.loadLearnedWords();
         this.loadVocabularyBook();
         this.loadMasteredWords();
         
-        // 临时调试：清空学习记录以便测试
-        console.log('当前已学习词语数量:', this.state.learnedWords.size);
-        if (this.state.learnedWords.size > 0) {
-            console.log('清空学习记录以便测试...');
-            this.clearLearnedWords();
-        }
         
         this.startPassiveLearning();
         console.log('被动学习模式已启动');
@@ -394,11 +384,6 @@ class PassiveLearningManager {
                 continue;
             }
             
-            // 过滤掉已学习的词语
-            if (config.passiveLearningRecord && this.state.learnedWords.has(word)) {
-                console.log('词语已学习，跳过:', word);
-                continue;
-            }
 
             console.log('词语通过所有过滤条件，添加到候选列表:', word);
             words.push({
@@ -452,11 +437,6 @@ class PassiveLearningManager {
                     // 添加到生词本
                     this.addToVocabularyBook(wordInfo.text);
                     
-                    // 记录已学习的词语
-                    if (config.passiveLearningRecord) {
-                        this.state.learnedWords.add(wordInfo.text);
-                        this.saveLearnedWords();
-                    }
                 }
             } catch (error) {
                 console.warn('翻译词语失败:', wordInfo.text, error);
@@ -742,44 +722,10 @@ class PassiveLearningManager {
         });
     }
 
-    // 加载已学习的词语
-    private loadLearnedWords() {
-        if (!config.passiveLearningRecord) return;
-
-        try {
-            const saved = localStorage.getItem('fluent-read-learned-words');
-            if (saved) {
-                const words = JSON.parse(saved);
-                this.state.learnedWords = new Set(words);
-            }
-        } catch (error) {
-            console.warn('加载学习记录失败:', error);
-        }
-    }
-
-    // 保存已学习的词语
-    private saveLearnedWords() {
-        if (!config.passiveLearningRecord) return;
-
-        try {
-            const words = Array.from(this.state.learnedWords);
-            localStorage.setItem('fluent-read-learned-words', JSON.stringify(words));
-        } catch (error) {
-            console.warn('保存学习记录失败:', error);
-        }
-    }
-
-    // 清除学习记录
-    clearLearnedWords() {
-        this.state.learnedWords.clear();
-        localStorage.removeItem('fluent-read-learned-words');
-        console.log('已清空学习记录');
-    }
 
     // 获取学习统计
     getLearningStats() {
         return {
-            learnedWordsCount: this.state.learnedWords.size,
             processedElementsCount: this.state.processedElements.size,
             translationCacheSize: this.state.translationCache.size,
             vocabularyBookCount: config.passiveLearningVocabularyBook.length,

@@ -538,19 +538,6 @@
                 </el-col>
               </el-row>
 
-              <!-- 学习记录 -->
-              <el-row class="margin-bottom margin-left-2em">
-                <el-col :span="20" class="lightblue rounded-corner">
-                  <el-tooltip class="box-item" effect="dark" content="记录已学习的词语，避免重复翻译相同的词汇" placement="top-start" :show-after="500">
-                    <span class="popup-text popup-vertical-left">学习记录<el-icon class="icon-margin">
-                        <ChatDotRound />
-                      </el-icon></span>
-                  </el-tooltip>
-                </el-col>
-                <el-col :span="4" class="flex-end">
-                  <el-switch v-model="config.passiveLearningRecord" inline-prompt active-text="启用" inactive-text="禁用" />
-                </el-col>
-              </el-row>
 
               <!-- 生词本管理 -->
               <el-row class="margin-bottom margin-left-2em">

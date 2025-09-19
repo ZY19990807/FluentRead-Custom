@@ -56,7 +56,6 @@ export class Config {
     passiveLearningMode: boolean; // 是否启用被动学习模式
     passiveLearningDensity: string; // 被动学习替换密度
     passiveLearningDisplayMode: string; // 被动学习显示方式
-    passiveLearningRecord: boolean; // 是否启用学习记录
     passiveLearningSmartDisplay: boolean; // 智能展示模式
     passiveLearningMaxWordsPerNode: number; // 每节点最大替换数
     passiveLearningWordLibrarySource: string; // 词库来源
@@ -113,7 +112,6 @@ export class Config {
         this.passiveLearningMode = false; // 默认关闭被动学习模式
         this.passiveLearningDensity = 'light'; // 默认轻度替换
         this.passiveLearningDisplayMode = 'replace'; // 默认直接替换
-        this.passiveLearningRecord = true; // 默认启用学习记录
         this.passiveLearningSmartDisplay = true; // 默认启用智能展示模式
         this.passiveLearningMaxWordsPerNode = 1; // 默认每节点最多1个词
         this.passiveLearningWordLibrarySource = 'page'; // 默认使用页面统计
