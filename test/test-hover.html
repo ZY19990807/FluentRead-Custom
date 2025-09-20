@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>悬停功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-word {
+            background-color: #e8f5e8;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .fluent-read-passive-tooltip {
+            position: absolute;
+            background: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 10000;
+            pointer-events: none;
+            max-width: 200px;
+            word-wrap: break-word;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>悬停功能测试</h1>
+    <p>这是一个测试页面，用于验证悬停显示原始中文的功能。</p>
+    <p>请将鼠标悬停在下面的词语上，应该显示原始中文提示框：</p>
+    
+    <div>
+        <span class="test-word" data-original-text="测试">test</span> 
+        <span class="test-word" data-original-text="学习">learning</span> 
+        <span class="test-word" data-original-text="功能">function</span>
+    </div>
+    
+    <p>如果悬停功能正常，你应该看到原始中文词语的提示框。</p>
+    
+    <script>
+        // 添加悬停事件监听器
+        document.querySelectorAll('.test-word').forEach(element => {
+            element.addEventListener('mouseenter', function(event) {
+                console.log('悬停事件触发:', event);
+                const originalText = this.getAttribute('data-original-text');
+                console.log('原始文本:', originalText);
+                
+                if (originalText) {
+                    showTooltip(event, originalText);
+                }
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                hideTooltip();
+            });
+        });
+        
+        function showTooltip(event, text) {
+            console.log('创建提示框:', text);
+            
+            // 先移除已存在的提示框
+            hideTooltip();
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'fluent-read-passive-tooltip';
+            tooltip.textContent = text;
+            
+            document.body.appendChild(tooltip);
+            console.log('提示框已添加到DOM');
+
+            const rect = event.target.getBoundingClientRect();
+            const left = rect.left + window.scrollX;
+            const top = rect.top + window.scrollY - 30;
+            
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            
+            console.log('提示框位置:', { left, top, rect: rect });
+        }
+        
+        function hideTooltip() {
+            const tooltip = document.querySelector('.fluent-read-passive-tooltip');
+            if (tooltip) {
+                console.log('隐藏提示框');
+                tooltip.remove();
+            }
+        }
+    </script>
+</body>
+</html>

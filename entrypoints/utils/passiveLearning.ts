@@ -508,11 +508,28 @@ class PassiveLearningManager {
             finalText: before + replacement + after
         });
 
-        const newText = before + replacement + after;
-        textNode.textContent = newText;
-
-        // 添加样式类
-        this.addTranslationStyles(textNode.parentElement!);
+        // 创建新的DOM结构，保持事件监听器
+        const parent = textNode.parentElement!;
+        
+        // 创建前文本节点
+        const beforeNode = document.createTextNode(before);
+        
+        // 创建翻译后的元素
+        const translatedElement = document.createElement('span');
+        translatedElement.textContent = replacement;
+        translatedElement.setAttribute('data-original-text', wordInfo.text);
+        translatedElement.classList.add('fluent-read-passive-learning');
+        
+        // 创建后文本节点
+        const afterNode = document.createTextNode(after);
+        
+        // 替换原文本节点
+        parent.replaceChild(beforeNode, textNode);
+        parent.insertBefore(translatedElement, beforeNode.nextSibling);
+        parent.insertBefore(afterNode, translatedElement.nextSibling);
+        
+        // 添加事件监听器
+        this.addTranslationStyles(translatedElement, wordInfo.text);
     }
 
     // 智能展示模式判断
@@ -540,8 +557,11 @@ class PassiveLearningManager {
     }
 
     // 添加翻译样式
-    private addTranslationStyles(element: Element) {
-        element.classList.add('fluent-read-passive-learning');
+    private addTranslationStyles(element: Element, originalText?: string) {
+        // 设置原始文本属性（如果还没有设置）
+        if (originalText && !element.getAttribute('data-original-text')) {
+            element.setAttribute('data-original-text', originalText);
+        }
         
         // 添加悬停显示原文的功能
         element.addEventListener('mouseenter', this.showOriginalText);
@@ -553,11 +573,18 @@ class PassiveLearningManager {
 
     // 显示原文
     private showOriginalText = (event: Event) => {
+        console.log('悬停事件触发:', event);
         const element = event.target as Element;
         const originalText = element.getAttribute('data-original-text');
         
+        console.log('悬停元素:', element);
+        console.log('原始文本:', originalText);
+        
         if (originalText) {
+            console.log('显示提示框:', originalText);
             this.showTooltip(event, originalText);
+        } else {
+            console.log('没有找到原始文本属性');
         }
     };
 
@@ -652,6 +679,11 @@ class PassiveLearningManager {
 
     // 显示提示框
     private showTooltip(event: Event, text: string) {
+        console.log('创建提示框:', text);
+        
+        // 先移除已存在的提示框
+        this.hideTooltip();
+        
         const tooltip = document.createElement('div');
         tooltip.className = 'fluent-read-passive-tooltip';
         tooltip.textContent = text;
@@ -666,19 +698,29 @@ class PassiveLearningManager {
             pointer-events: none;
             max-width: 200px;
             word-wrap: break-word;
+            opacity: 1;
+            transition: opacity 0.2s ease;
         `;
 
         document.body.appendChild(tooltip);
+        console.log('提示框已添加到DOM');
 
         const rect = (event.target as Element).getBoundingClientRect();
-        tooltip.style.left = `${rect.left + window.scrollX}px`;
-        tooltip.style.top = `${rect.top + window.scrollY - 30}px`;
+        const left = rect.left + window.scrollX;
+        const top = rect.top + window.scrollY - 30;
+        
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+        
+        console.log('提示框位置:', { left, top, rect: rect });
+        console.log('提示框元素:', tooltip);
     }
 
     // 隐藏提示框
     private hideTooltip() {
         const tooltip = document.querySelector('.fluent-read-passive-tooltip');
         if (tooltip) {
+            console.log('隐藏提示框');
             tooltip.remove();
         }
     }
