@@ -61,6 +61,13 @@ class PassiveLearningManager {
     // 全页候选词池
     private candidateWordPool: WordInfo[] = [];
     private isWordPoolBuilt = false;
+    
+    // 全局鼠标移动监听器
+    private globalMouseMoveHandler: ((event: MouseEvent) => void) | null = null;
+    // 全局点击监听器
+    private globalClickHandler: ((event: MouseEvent) => void) | null = null;
+    // 提示框隐藏定时器
+    private tooltipHideTimer: NodeJS.Timeout | null = null;
 
     // 初始化被动学习模式
     async init() {
@@ -88,6 +95,9 @@ class PassiveLearningManager {
             return;
         }
         
+        // 添加全局鼠标移动监听器，确保提示框在鼠标移动时能够正确隐藏
+        this.addGlobalMouseListener();
+        
         console.log('被动学习模式已启用，开始启动...');
         this.state.isEnabled = true;
         this.loadVocabularyBook();
@@ -104,6 +114,8 @@ class PassiveLearningManager {
         this.state.isEnabled = false;
         this.restoreAllTranslations();
         this.state.processedElements.clear();
+        // 移除全局鼠标监听器
+        this.removeGlobalMouseListener();
     }
 
     // 开始被动学习
@@ -596,11 +608,17 @@ class PassiveLearningManager {
     // 处理右键点击
     private handleRightClick = (event: Event) => {
         event.preventDefault();
+        
         const element = event.target as Element;
         const originalText = element.getAttribute('data-original-text');
         
         if (originalText) {
+            // 右键点击时显示提示框
+            this.showTooltip(event, originalText);
+            // 然后显示右键菜单
             this.showContextMenu(event as MouseEvent, originalText);
+            // 设置延迟隐藏（5秒后自动隐藏提示框和菜单）
+            this.hideTooltipDelayed(5000);
         }
     };
 
@@ -638,6 +656,14 @@ class PassiveLearningManager {
             color: #333;
         `;
         markItem.textContent = isMastered ? '取消掌握标记' : '标记为已掌握';
+        // 添加鼠标悬停效果
+        markItem.addEventListener('mouseenter', () => {
+            markItem.style.background = '#f5f5f5';
+        });
+        markItem.addEventListener('mouseleave', () => {
+            markItem.style.background = 'transparent';
+        });
+        
         markItem.addEventListener('click', () => {
             if (isMastered) {
                 this.unmarkAsMastered(word);
@@ -645,6 +671,8 @@ class PassiveLearningManager {
                 this.markAsMastered(word);
             }
             menu.remove();
+            // 点击菜单项后也隐藏提示框
+            this.hideTooltip();
         });
 
         const removeItem = document.createElement('div');
@@ -656,9 +684,19 @@ class PassiveLearningManager {
             border-top: 1px solid #eee;
         `;
         removeItem.textContent = '从生词本移除';
+        // 添加鼠标悬停效果
+        removeItem.addEventListener('mouseenter', () => {
+            removeItem.style.background = '#f5f5f5';
+        });
+        removeItem.addEventListener('mouseleave', () => {
+            removeItem.style.background = 'transparent';
+        });
+        
         removeItem.addEventListener('click', () => {
             this.removeFromVocabularyBook(word);
             menu.remove();
+            // 点击菜单项后也隐藏提示框
+            this.hideTooltip();
         });
 
         menu.appendChild(markItem);
@@ -668,7 +706,9 @@ class PassiveLearningManager {
         // 点击其他地方关闭菜单
         const closeMenu = (e: Event) => {
             if (!menu.contains(e.target as Node)) {
-                menu.remove();
+                // 关闭菜单时也隐藏提示框
+                this.hideTooltip();
+                this.hideContextMenu();
                 document.removeEventListener('click', closeMenu);
             }
         };
@@ -681,6 +721,12 @@ class PassiveLearningManager {
     private showTooltip(event: Event, text: string) {
         console.log('创建提示框:', text);
         
+        // 清除之前的隐藏定时器
+        if (this.tooltipHideTimer) {
+            clearTimeout(this.tooltipHideTimer);
+            this.tooltipHideTimer = null;
+        }
+        
         // 先移除已存在的提示框
         this.hideTooltip();
         
@@ -688,40 +734,75 @@ class PassiveLearningManager {
         tooltip.className = 'fluent-read-passive-tooltip';
         tooltip.textContent = text;
         tooltip.style.cssText = `
-            position: absolute;
+            position: fixed;
             background: #333;
             color: white;
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 4px;
             font-size: 12px;
-            z-index: 10000;
+            z-index: 10001;
             pointer-events: none;
             max-width: 200px;
             word-wrap: break-word;
             opacity: 1;
             transition: opacity 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         `;
 
         document.body.appendChild(tooltip);
         console.log('提示框已添加到DOM');
 
-        const rect = (event.target as Element).getBoundingClientRect();
-        const left = rect.left + window.scrollX;
-        const top = rect.top + window.scrollY - 30;
+        // 使用鼠标位置，显示在左上方避免与菜单冲突
+        const mouseEvent = event as MouseEvent;
+        const left = mouseEvent.clientX - 120; // 鼠标左侧120px
+        const top = mouseEvent.clientY - 50;   // 鼠标上方50px
         
-        tooltip.style.left = `${left}px`;
-        tooltip.style.top = `${top}px`;
+        // 确保提示框不会超出屏幕边界
+        const adjustedLeft = Math.max(10, Math.min(left, window.innerWidth - 220));
+        const adjustedTop = Math.max(10, Math.min(top, window.innerHeight - 40));
         
-        console.log('提示框位置:', { left, top, rect: rect });
+        tooltip.style.left = `${adjustedLeft}px`;
+        tooltip.style.top = `${adjustedTop}px`;
+        
+        console.log('提示框位置:', { left, top, clientX: mouseEvent.clientX, clientY: mouseEvent.clientY });
         console.log('提示框元素:', tooltip);
     }
 
     // 隐藏提示框
     private hideTooltip() {
+        // 清除隐藏定时器
+        if (this.tooltipHideTimer) {
+            clearTimeout(this.tooltipHideTimer);
+            this.tooltipHideTimer = null;
+        }
+        
         const tooltip = document.querySelector('.fluent-read-passive-tooltip');
         if (tooltip) {
             console.log('隐藏提示框');
             tooltip.remove();
+        }
+    }
+
+    // 延迟隐藏提示框和菜单
+    private hideTooltipDelayed(delay: number = 2000) {
+        // 清除之前的定时器
+        if (this.tooltipHideTimer) {
+            clearTimeout(this.tooltipHideTimer);
+        }
+        
+        // 设置新的延迟隐藏
+        this.tooltipHideTimer = setTimeout(() => {
+            this.hideTooltip();
+            this.hideContextMenu();
+        }, delay);
+    }
+
+    // 隐藏右键菜单
+    private hideContextMenu() {
+        const menu = document.querySelector('.fluent-read-context-menu');
+        if (menu) {
+            console.log('隐藏右键菜单');
+            menu.remove();
         }
     }
 
@@ -860,6 +941,55 @@ class PassiveLearningManager {
     // 检查是否已启用
     isEnabled() {
         return this.state.isEnabled;
+    }
+
+    // 添加全局鼠标监听器
+    private addGlobalMouseListener() {
+        // 移除已存在的监听器，避免重复添加
+        this.removeGlobalMouseListener();
+        
+        // 添加鼠标移动监听器，当鼠标移动时隐藏提示框和菜单
+        this.globalMouseMoveHandler = (event: MouseEvent) => {
+            // 检查鼠标是否在被动学习元素上
+            const target = event.target as Element;
+            const isOnPassiveElement = target.closest('.fluent-read-passive-learning');
+            const isOnContextMenu = target.closest('.fluent-read-context-menu');
+            const isOnTooltip = target.closest('.fluent-read-passive-tooltip');
+            
+            // 如果鼠标不在被动学习元素上且不在右键菜单上且不在提示框上，隐藏提示框和菜单
+            if (!isOnPassiveElement && !isOnContextMenu && !isOnTooltip) {
+                this.hideTooltip();
+                this.hideContextMenu();
+            }
+        };
+        
+        // 添加点击监听器，点击其他位置时隐藏提示框和菜单
+        this.globalClickHandler = (event: MouseEvent) => {
+            // 检查点击的是否是右键菜单
+            const target = event.target as Element;
+            const isOnContextMenu = target.closest('.fluent-read-context-menu');
+            
+            // 如果点击的不是右键菜单，隐藏提示框和菜单
+            if (!isOnContextMenu) {
+                this.hideTooltip();
+                this.hideContextMenu();
+            }
+        };
+        
+        document.addEventListener('mousemove', this.globalMouseMoveHandler);
+        document.addEventListener('click', this.globalClickHandler);
+    }
+
+    // 移除全局鼠标监听器
+    private removeGlobalMouseListener() {
+        if (this.globalMouseMoveHandler) {
+            document.removeEventListener('mousemove', this.globalMouseMoveHandler);
+            this.globalMouseMoveHandler = null;
+        }
+        if (this.globalClickHandler) {
+            document.removeEventListener('click', this.globalClickHandler);
+            this.globalClickHandler = null;
+        }
     }
 }
 

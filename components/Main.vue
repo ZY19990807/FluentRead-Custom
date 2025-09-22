@@ -432,7 +432,8 @@
                   </el-tooltip>
                 </el-col>
                 <el-col :span="12">
-                  <el-select v-model="config.passiveLearningDensity" placeholder="请选择替换密度">
+                  <el-select v-model="config.passiveLearningDensity" placeholder="请选择替换密度" 
+                             @change="handleDensityChange">
                     <el-option class="select-left" v-for="item in options.passiveLearningDensity" :key="item.value" 
                                :label="item.label" :value="item.value" />
                   </el-select>
@@ -911,16 +912,28 @@ storage.watch('local:config', (newValue: any, oldValue: any) => {
   if (typeof newValue === 'string' && newValue) {
     // 将新的配置值解析为对象,并合并到当前的 config.value 中
     // 这样可以保持所有页面的配置同步
-    Object.assign(config.value, JSON.parse(newValue));
+    const newConfig = JSON.parse(newValue);
+    // 使用 Object.assign 避免触发响应式更新循环
+    Object.assign(config.value, newConfig);
   }
 });
+
+// 防抖定时器
+let configSaveTimer: NodeJS.Timeout | null = null;
 
 // 监听菜单栏配置变化
 // 当配置发生改变时,将新的配置序列化为 JSON 字符串并保存到 storage 中
 // deep: true 表示深度监听对象内部属性的变化
 watch(config, (newValue: any, oldValue: any) => {
-  // TODO 监听配置变化，显示刷新提示
-  storage.setItem('local:config', JSON.stringify(newValue));
+  // 清除之前的定时器
+  if (configSaveTimer) {
+    clearTimeout(configSaveTimer);
+  }
+  
+  // 使用防抖机制，避免频繁保存配置
+  configSaveTimer = setTimeout(() => {
+    storage.setItem('local:config', JSON.stringify(newValue));
+  }, 100); // 100ms 防抖延迟
 }, { deep: true });
 
 // 计算属性
@@ -1068,6 +1081,13 @@ watch(() => config.value.passiveLearningMode, (newMode) => {
 // 监听开关变化
 const handleSwitchChange = () => {
   showRefreshTip.value = true;
+};
+
+// 处理替换密度变化
+const handleDensityChange = (newDensity: string) => {
+  console.log('替换密度已更改为:', newDensity);
+  // 这里可以添加额外的处理逻辑，比如通知内容脚本更新
+  // 由于配置已经通过 v-model 自动更新，这里主要是为了日志记录
 };
 
 // 处理插件状态变化
