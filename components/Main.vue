@@ -259,15 +259,15 @@
 
       <!-- 每节点最大替换数 -->
       <el-row class="margin-bottom margin-left-2em">
-        <el-col :span="12" class="lightblue rounded-corner">
+        <el-col :span="16" class="lightblue rounded-corner">
           <el-tooltip class="box-item" effect="dark" content="控制每个文本节点最多替换的词语数量，避免页面被过度割裂" placement="top-start" :show-after="500">
             <span class="popup-text popup-vertical-left">每节点最大替换数<el-icon class="icon-margin">
                 <ChatDotRound />
               </el-icon></span>
           </el-tooltip>
         </el-col>
-        <el-col :span="12">
-          <el-select v-model="config.passiveLearningMaxWordsPerNode" placeholder="请选择最大替换数">
+        <el-col :span="8">
+          <el-select v-model="config.passiveLearningMaxWordsPerNode" placeholder="请选择最大替换数" size="small">
             <el-option class="select-left" v-for="item in options.passiveLearningMaxWordsPerNode" :key="item.value" 
                        :label="item.label" :value="item.value" />
           </el-select>
