@@ -208,6 +208,18 @@
 
     <!-- 被动学习模式设置 -->
     <div v-if="config.on && config.passiveLearningMode" class="passive-learning-settings">
+      <!-- 一键重置所有设置 -->
+      <el-row class="margin-bottom margin-left-2em">
+        <el-col :span="24" class="flex-end">
+          <el-button size="small" type="warning" @click="resetPassiveLearningSettings">
+            <el-icon class="icon-margin">
+              <Refresh />
+            </el-icon>
+            一键重置所有设置
+          </el-button>
+        </el-col>
+      </el-row>
+
       <!-- 替换密度 -->
       <el-row class="margin-bottom margin-left-2em">
         <el-col :span="12" class="lightblue rounded-corner">
@@ -1255,6 +1267,40 @@ const handleHotkeyChange = (value: string) => {
       }, 100);
     }
   }
+};
+
+// 重置被动学习模式所有设置
+const resetPassiveLearningSettings = () => {
+  ElMessageBox.confirm(
+    '确定要重置所有被动学习模式设置吗？此操作将恢复所有设置到默认值，包括生词本和已掌握词语。',
+    '重置被动学习设置',
+    {
+      confirmButtonText: '确定重置',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+    // 重置所有被动学习相关配置
+    config.value.passiveLearningMode = false;
+    config.value.passiveLearningDensity = 'light';
+    config.value.passiveLearningDisplayMode = 'replace';
+    config.value.passiveLearningSmartDisplay = true;
+    config.value.passiveLearningMaxWordsPerNode = 1;
+    config.value.passiveLearningWordLibrarySource = 'page';
+    config.value.passiveLearningWordLibraryLevel = '1-3';
+    config.value.passiveLearningVocabularyBook = [];
+    config.value.passiveLearningMasteredWords = [];
+    config.value.passiveLearningFamiliarityThreshold = 0.5;
+    config.value.passiveLearningWordLengthPreference = 'short';
+    
+    ElMessage({
+      message: '被动学习模式设置已重置为默认值',
+      type: 'success',
+      duration: 2000
+    });
+  }).catch(() => {
+    // 用户取消操作，不做任何处理
+  });
 };
 
 // 打开自定义快捷键对话框
